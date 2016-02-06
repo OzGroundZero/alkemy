@@ -50,6 +50,10 @@ public class ScannerActivity extends AActivity {
     private TextView mObjectNameTextView;
     private TextView mObjectDescription;
     private TextView mObjectWebResults;
+    private Intent mOriginIntent;
+    private String mOriginIntentAction;
+    private Bundle mOriginIntentExtras;
+    private String mStartedBy = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +85,10 @@ public class ScannerActivity extends AActivity {
             }
         };
 
-        //Log.v(TAG, "IN SCANNER ACTIVITY");
+        mOriginIntent = getIntent();
+        if (mOriginIntent != null) {
+            mOriginIntentAction = mOriginIntent.getAction();
+        }
 
         mObjectNameTextView = (TextView) findViewById(R.id.object_name);
         mObjectDescription = (TextView) findViewById(R.id.object_description);
@@ -95,7 +102,12 @@ public class ScannerActivity extends AActivity {
         if(AConnection.isNetworkAvailable(mActivityContext)) {
             Intent intent = new Intent(this, SeenCameraActivity.class);
             intent.setAction(AConstants.Scanner.ACTION_SCANNER_RUN_SEEN_FOR_IMAGE_URL);
-            intent.putExtra(AConstants.Intent.EXTRA_KEY_DUMMY, AConstants.Intent.EXTRA_VALUE_DUMMY);
+            if(mOriginIntentAction != null
+                    && mOriginIntentAction.equals(AConstants.Scanner.ACTION_MYO_RUN_SCANNER)) {
+                Log.v(TAG, "ran by myo service");
+                intent.putExtra(AConstants.Seen.KEY_RUN_TYPE,
+                        AConstants.Seen.VALUE_RUN_TYPE_MYO_SERVICE);
+            }
             LToast.showS(mActivityContext, "Scan Object");
             startActivityForResult(intent, CameraUtils.TAKE_PHOTO_FOR_SCANNER_ACTIVITY_RESULT);
         } else {

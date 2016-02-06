@@ -16,7 +16,7 @@
     <string name="live_card_title_event_service_running">Event Service Running</string>
     <string name="title_activity_scanner">Scanner Activity</string>
     <string name="title_activity_a">AActivity</string>
-    <string name="myo_pose">Myo Pose = %1$s</string>
+    <string name="myo_pose">MP = %1$s</string>
     <string name="myo_disconnected">Myo Was Disconnected</string>
     <string name="myo_connected">Myo was Connected</string>
     <string name="myo_attached">Myo Attached</string>

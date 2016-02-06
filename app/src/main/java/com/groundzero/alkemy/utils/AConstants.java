@@ -26,6 +26,7 @@ public class AConstants {
 
     public class Scanner {
         public static final String ACTION_SCANNER_RUN_SEEN_FOR_IMAGE_URL = "com.groundzero.scanner.action.RUN_SEEN_FOR_IMAGE_URL";
+        public static final String ACTION_MYO_RUN_SCANNER = "com.groundzero.seen.action.ACTION_MYO_RUN_SCANNER";
     }
 
     public class Intent {

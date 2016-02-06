@@ -58,7 +58,7 @@ public class SeenCameraActivity extends AActivity {
 
     private GestureDetector mGestureDetector;
     String thumbnailPath;
-    private boolean notUploaded = true;
+    private boolean pictureNotYetUploaded = true;
     ALocation mALocation;
 
     // BaseListener  = Receives detection results,
@@ -96,6 +96,7 @@ public class SeenCameraActivity extends AActivity {
             public void handleTheMessage(Message msg) {
                 switch (msg.what) {
                     case Messages.Seen.FINISH_ACTIVITY:
+                        Log.d(TAG, "FINISHING ACTIVIT AFTER SAVE SCANNER PIC");
                         finish();
                 }
             }
@@ -112,7 +113,8 @@ public class SeenCameraActivity extends AActivity {
             //Log.v(TAG, "mOriginIntentAction = " + mOriginIntentAction);
             mOriginIntentExtras = mOriginIntent.getExtras();
             if (mOriginIntentExtras != null) {
-                if (mOriginIntentAction.equals(AConstants.Seen.ACTION_AIS_RUN_SEEN)) {
+                if (mOriginIntentAction.equals(AConstants.Seen.ACTION_AIS_RUN_SEEN)
+                        || mOriginIntentAction.equals(AConstants.Seen.ACTION_MYO_RUN_SEEN)) {
                     String runType = mOriginIntentExtras.getString(AConstants.Seen.KEY_RUN_TYPE);
                     if (runType.equals(AConstants.Seen.VALUE_RUN_TYPE_ALKEMY_EVENT_SERVICE)) {
                         mCapturedBy = AConstants.Seen.VALUE_CAPTURED_BY_SYSTEM;
@@ -121,6 +123,10 @@ public class SeenCameraActivity extends AActivity {
                     }
                 } else if (mOriginIntentAction.equals(AConstants.Scanner.ACTION_SCANNER_RUN_SEEN_FOR_IMAGE_URL)) {
                     mIsForScannerActivityResult = true;
+                    String runType = mOriginIntentExtras.getString(AConstants.Seen.KEY_RUN_TYPE);
+                    if (runType != null && runType.equals(AConstants.Seen.VALUE_RUN_TYPE_MYO_SERVICE)) {
+                        mCapturedBy = AConstants.Seen.VALUE_CAPTURED_BY_MYO;
+                    }
                     //Log.v(TAG, "mIsForScannerActivityResult = " + mIsForScannerActivityResult);
                 }
             }
@@ -128,8 +134,6 @@ public class SeenCameraActivity extends AActivity {
 
         takePhoto();
     }
-
-
 
     public void saveSeenData(String seenId, String location, String capturedAt, String capturedBy) {
         AQuery query = new AQuery(mActivityContext, ADbContract.SeenEntry.TABLE_NAME);
@@ -184,7 +188,7 @@ public class SeenCameraActivity extends AActivity {
             String thumbnailPath = data.getStringExtra(Intents.EXTRA_THUMBNAIL_FILE_PATH);
             Log.v(TAG, "THUMB PATH: " + thumbnailPath);
             processPicture(picturePath, thumbnailPath);
-
+            Log.v(TAG, "AFTER Process Pic");
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -192,9 +196,10 @@ public class SeenCameraActivity extends AActivity {
 
     private void processPicture(final String picturePath, String thumbnailPath) {
         final File pictureFile = new File(picturePath);
-        if (notUploaded) {
+        if (pictureNotYetUploaded) {
             if (pictureFile.exists()) {
                 mImageFilePath = picturePath;
+                Log.d(TAG, "ImageFilePath = " + picturePath);
                 //Log.d("processPicture", "the file exists! -- processing image");
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 Bitmap bitmap = BitmapFactory.decodeFile(pictureFile.getAbsolutePath(), bmOptions);
@@ -204,8 +209,9 @@ public class SeenCameraActivity extends AActivity {
                 // Compress image to lower quality scale 1 - 100
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream);
                 byte[] image = stream.toByteArray();
-
+                Log.d(TAG, "CREATING PFILE EVENTUALLY");
                 ParseFile pFile = new ParseFile(ParseConstants.VALUE_IMAGE_URL_SUFFIX, image);
+                Log.d(TAG, "SAVING PFILE EVENTUALLY");
                 pFile.saveInBackground();
 
                 // Create a New Class called "ImageUpload" in Parse
@@ -228,25 +234,31 @@ public class SeenCameraActivity extends AActivity {
                 // Create the class and the columns
                 uploadPicture(capturedAt, imgUpload, location, thumbnailPath);
 
-                notUploaded = false;
-                //Log.d("processPicture", "Is now uploaded" + notUploaded);
-
+                pictureNotYetUploaded = false;
+                Log.d(TAG, "processPicture: Is not uploaded: " + pictureNotYetUploaded);
             } else {
+                //Log.d(TAG, "processPicture: BEFORE CREATE PICTURE FILE!");
                 createPictureFile(picturePath, pictureFile);
+                //Log.d(TAG, "processPicture: AFTER CREATE PICTURE FILE!");
             }
+        } else {
+            Log.d(TAG, "PICTURE UPLOADED");
         }
 
     }
 
     private void createPictureFile(final String picturePath, File pictureFile) {
-        //Log.d("processPicture", "the file does not exist! attempting to create");
+        Log.d(TAG, "the file does not exist! attempting to create: " + mCapturedBy);
         final File parentDirectory = pictureFile.getParentFile();
         FileObserver observer = new FileObserver(parentDirectory.getPath(), FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
+
             private boolean isFileWritten = false;
 
             @Override
             public void onEvent(int event, String path) {
+                Log.d(TAG, "createPictureFile onEvent");
                 if (!isFileWritten) {
+                    Log.d(TAG, "FILE IS WRITTEN. PROCESSING PIC AGAIN");
                     stopWatching();
                     // Now that the file is ready, recursively call
                     // processPicture again (on the UI thread).
@@ -256,35 +268,65 @@ public class SeenCameraActivity extends AActivity {
                             processPicture(picturePath, thumbnailPath);
                         }
                     });
+                } else {
+                    Log.d(TAG, "FILE IS WRITTEN");
                 }
             }
         };
+        //Log.d(TAG, " createPictureFile: starting observer to start watching");
         observer.startWatching();
+        if(mCapturedBy.equals(AConstants.Seen.VALUE_CAPTURED_BY_MYO)) {
+            Log.d(TAG, "**********************" +
+                    "\nthis is myo capture: sleep for 4 secs then try process picture again!\n*********");
+            try {
+                Thread.sleep(4000);
+                observer.stopWatching();
+                if(pictureNotYetUploaded) processPicture(picturePath, thumbnailPath);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void uploadPicture(final String capturedAt, final ParseObject imgUpload, final String location, final String thumbnailPath) {
-        if (!mIsForScannerActivityResult) {
-            mUiHandler.obtainMessage(AHandler.Messages.Seen.FINISH_ACTIVITY).sendToTarget();
-            //save in background so Seen can close out
-            imgUpload.saveInBackground(new SaveCallback() {
-                @Override
-                public void done(ParseException e) {
-                    doAfterSave(imgUpload, location, capturedAt, thumbnailPath);
-                }
-            });
-        } else {
-            //save sequentially, so Seen doesn't close prematurely
-            try {
-                if (AConnection.isNetworkAvailable(mActivityContext)) {
-                    imgUpload.save();
-                    doAfterSave(imgUpload, location, capturedAt, thumbnailPath);
-                    mUiHandler.obtainMessage(AHandler.Messages.Seen.FINISH_ACTIVITY).sendToTarget();
-                } else {
-                    Log.v(TAG, "No internet connection...");
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
+        if (!mIsForScannerActivityResult)
+            uploadSeenPicture(capturedAt, imgUpload, location, thumbnailPath);
+        else uploadScannerPicture(capturedAt, imgUpload, location, thumbnailPath);
+    }
+
+    private void uploadSeenPicture(final String capturedAt, final ParseObject imgUpload, final String location, final String thumbnailPath) {
+        LToast.showL(mActivityContext, "Uploading Seen Picture");
+        Log.d(TAG, "uploadPicture uploading for SEEN ");
+        mUiHandler.obtainMessage(AHandler.Messages.Seen.FINISH_ACTIVITY).sendToTarget();
+        //save in background so Seen can close out
+        imgUpload.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                Log.d(TAG, "####***AFTER SAVE SEEN***####");
+                doAfterSave(imgUpload, location, capturedAt, thumbnailPath);
             }
+        });
+    }
+
+    private void uploadScannerPicture(String capturedAt, ParseObject imgUpload, String location, String thumbnailPath) {
+        LToast.showL(mActivityContext, "Uploading Scanner Picture");
+        Log.d(TAG, "uploadPicture uploading for SCANNER ");
+        ///FOR SCANNER
+        //save sequentially, so Seen doesn't close prematurely
+        try {
+            if (AConnection.isNetworkAvailable(mActivityContext)) {
+                Log.d(TAG, "Before imgUpload.save()");
+                imgUpload.save();
+                Log.d(TAG, "Before doAfterSave.save()");
+                doAfterSave(imgUpload, location, capturedAt, thumbnailPath);
+                Log.d(TAG, "AFTER doAfterSave.save()");
+                mUiHandler.obtainMessage(AHandler.Messages.Seen.FINISH_ACTIVITY).sendToTarget();
+            } else {
+                Log.v(TAG, "No internet connection ...");
+            }
+        } catch (ParseException e) {
+            Log.d(TAG, "ParseException");
+            e.printStackTrace();
         }
     }
 

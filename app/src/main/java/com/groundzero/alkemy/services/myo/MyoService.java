@@ -12,6 +12,8 @@ import android.widget.Toast;
 import com.groundzero.alkemy.R;
 import com.groundzero.alkemy.activity.scanner.ScannerActivity;
 import com.groundzero.alkemy.activity.seen.SeenCameraActivity;
+import com.groundzero.alkemy.utils.AConstants;
+import com.groundzero.alkemy.utils.LToast;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.DeviceListener;
 import com.thalmic.myo.Hub;
@@ -47,31 +49,32 @@ public class MyoService extends Service {
             // Show the name of the pose in a toast.
             showToast(getString(R.string.myo_pose, pose.toString()));
             switch (pose) {
-                case REST:
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        //e.printStackTrace();
-                    }
-                    showToast("Done Resting");
+                case DOUBLE_TAP:
+                    myo.unlock(Myo.UnlockType.TIMED);
                     break;
                 case FINGERS_SPREAD:
                     showToast("Running Seen");
                     //create an intent to launch the phone's camera to take a picture
                     Intent seenIntent = new Intent(mContext, SeenCameraActivity.class);
+                    seenIntent.setAction(AConstants.Seen.ACTION_MYO_RUN_SEEN);
+                    seenIntent.putExtra(AConstants.Seen.KEY_RUN_TYPE,
+                            AConstants.Seen.VALUE_RUN_TYPE_MYO_SERVICE);
                     seenIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     seenIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(seenIntent);
-                    tempLock(myo,3);
+                    tempLock(myo, 3);
+                    myo.lock();
                     break;
                 case WAVE_IN:
                     showToast("Running Scanner");
                     //create an intent to launch the phone's camera to take a picture
                     Intent scannerIntent = new Intent(mContext, ScannerActivity.class);
+                    scannerIntent.setAction(AConstants.Scanner.ACTION_MYO_RUN_SCANNER);
                     scannerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     scannerIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(scannerIntent);
-                    tempLock(myo, 3);
+                    tempLock(myo,3);
+                    myo.lock();
                     break;
                 default:
                     showToast(getString(R.string.myo_pose, pose.toString()));
@@ -99,6 +102,7 @@ public class MyoService extends Service {
     public void onCreate() {
         super.onCreate();
         mContext = this;
+        LToast.showL(mContext,"Started Myo Service");
         // First, we initialize the Hub singleton with an application identifier.
         Hub hub = Hub.getInstance();
         Log.v(TAG, "Starting Myo Service");
