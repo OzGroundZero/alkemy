@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/black">
+    <TextView
+        android:id="@+id/home_team_name_text_view"
+        android:layout_width="249px"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="40px" />
+
+    <TextView
+        android:id="@+id/away_team_name_text_view"
+        android:layout_width="249px"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="40px" />
+
+    <TextView
+        android:id="@+id/away_score_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/away_team_name_text_view"
+        android:layout_below="@+id/away_team_name_text_view"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:text="Alkemy"
+        android:textSize="70px" />
+
+    <TextView
+        android:id="@+id/main_service_title_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:text="Event Service Running"
+        android:textSize="32sp"
+        android:layout_marginTop="87dp"
+        android:textStyle="bold"
+        android:layout_below="@+id/away_score_text_view"
+        android:layout_centerHorizontal="true" />
+</RelativeLayout>

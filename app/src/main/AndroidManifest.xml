@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.groundzero.alkemy">
+
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="com.google.android.glass.permission.DEVELOPMENT" />
+
+    <application
+        android:name=".AlkemyApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_glass_logo"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".activity.onboarding.SplashScreenActivity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".activity.seen.SeenCameraActivity"
+            android:icon="@drawable/ic_glass_logo"
+            android:label="@string/title_activity_camera">
+            <intent-filter>
+                <action android:name="com.google.android.glass.action.VOICE_TRIGGER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.google.android.glass.VoiceTrigger"
+                android:resource="@xml/voice_trigger_seen" />
+        </activity>
+
+        <service
+            android:name=".services.event.EventService"
+            android:exported="false"></service>
+
+        <activity
+            android:name=".activity.myo.MyoInvisibleActivity"
+            android:label="@string/title_activity_event_service_invisible"></activity>
+        <activity
+            android:name=".activity.alkemy.LabActivity"
+            android:label="@string/title_activity_lab"></activity>
+
+        <receiver
+            android:name=".receivers.OnBootCompleteReceiver"
+            android:enabled="true"
+            android:process=":remote">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".activity.eventService.EventServiceMenuActivity"
+            android:label="@string/title_activity_event_service_menu"></activity>
+        <activity
+            android:name=".activity.scanner.ScannerActivity"
+            android:icon="@drawable/ic_glass_logo"
+            android:label="@string/title_activity_scanner">
+            <intent-filter>
+                <action android:name="com.google.android.glass.action.VOICE_TRIGGER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.google.android.glass.VoiceTrigger"
+                android:resource="@xml/voice_trigger_scanner" />
+        </activity>
+        <activity
+            android:name=".activity.myo.MyoServiceStarter"
+            android:icon="@drawable/ic_glass_logo"
+            android:label="@string/title_service_myo">
+            <intent-filter>
+                <action android:name="com.google.android.glass.action.VOICE_TRIGGER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.google.android.glass.VoiceTrigger"
+                android:resource="@xml/voice_trigger_restart_myo" />
+        </activity>
+        <activity
+            android:name=".activity.AActivity"
+            android:label="@string/title_activity_a"></activity>
+
+        <receiver
+            android:name=".receivers.ScreenOnReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".services.seen.SeenRecallService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".services.ScreenStateReceiverActivatorService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".services.myo.MyoService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".services.myo.MyoGlassService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".services.myo.MyoService"
+            android:enabled="true"
+            android:exported="true"></service>
+    </application>
+
+</manifest>
